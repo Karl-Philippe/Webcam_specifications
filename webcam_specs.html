@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Webcam Specs</title>
+</head>
+<body>
+    <h2>Webcam Test</h2>
+    <div id="general-info"></div>
+    <div id="photo-specs"></div>
+    <div id="video-specs"></div>
+
+    <script>
+        // Acquire webcam video stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(handleMediaStream)
+            .catch(error => console.error('getUserMedia() error:', error));
+
+        function handleMediaStream(mediaStream) {
+            const mediaStreamTrack = mediaStream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(mediaStreamTrack);
+
+            // Display general webcam info
+            displayGeneralInfo(mediaStreamTrack);
+
+            // Display video stream specs
+            displayVideoSpecs(mediaStreamTrack);
+
+            // Display photo specs
+            imageCapture.takePhoto()
+                .then(blob => createImageBitmap(blob))
+                .then(imageBitmap => displayPhotoSpecs(imageBitmap))
+                .catch(error => console.error('Error capturing photo:', error));
+        }
+
+        function displayGeneralInfo(track) {
+            const name = track.label;
+            const streamType = track.kind;
+            const isWebcamActivated = track.enabled;
+
+            document.getElementById('general-info').innerHTML = `
+                <h3>General Characteristics</h3>
+                <p>Name: ${name}</p>
+                <p>Active: ${isWebcamActivated}</p>
+                <p>Stream type: ${streamType}</p>
+            `;
+        }
+
+        function displayVideoSpecs(track) {
+            const settings = track.getSettings();
+            const wVideo = settings.width;
+            const hVideo = settings.height;
+            const frameRate = settings.frameRate;
+            const pixelsVid = (wVideo * hVideo * 10e-7).toFixed(2);
+            const bitrate = (frameRate * pixelsVid).toFixed(2);
+            const aspectRatioVideo = (wVideo / hVideo).toFixed(2);
+
+            document.getElementById('video-specs').innerHTML = `
+                <h3>Video stream specifications</h3>
+                <p>Spatial resolution: ${wVideo} x ${hVideo}</p>
+                <p>Frame rate: ${frameRate} FPS</p>
+                <p>Pixel density: ${pixelsVid} MP</p>
+                <p>Data rate: ${bitrate} MB/s (approx.)</p>
+                <p>Aspect ratio: ${aspectRatioVideo}</p>
+            `;
+        }
+
+        function displayPhotoSpecs(imageBitmap) {
+            const wPhoto = imageBitmap.width;
+            const hPhoto = imageBitmap.height;
+            const pixelsPhoto = (wPhoto * hPhoto * 10e-7).toFixed(2);
+            const aspectRatioPhoto = (wPhoto / hPhoto).toFixed(2);
+
+            document.getElementById('photo-specs').innerHTML = `
+                <h3>Photo specifications (Max specs)</h3>
+                <p>Spatial resolution: ${wPhoto} x ${hPhoto}</p>
+                <p>Pixel density: ${pixelsPhoto} MP</p>
+                <p>Aspect ratio: ${aspectRatioPhoto}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
